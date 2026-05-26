@@ -51,18 +51,21 @@ func (JSONPlugin) Import(path string, sink AddressInserter, progress ProgressFun
 		}
 
 		birthday, err := ValidateBirthday(jsonString(record, "birthday"))
-		if err == nil {
-			_, _ = sink.Insert(Address{
-				Name:     strings.TrimSpace(name),
-				Email:    strings.TrimSpace(email),
-				Birthday: birthday,
-				Address:  strings.TrimSpace(jsonString(record, "address")),
-				Phone:    strings.TrimSpace(jsonString(record, "phone")),
-				Mobile:   strings.TrimSpace(jsonString(record, "mobile")),
-				Custom:   strings.TrimSpace(jsonString(record, "custom")),
-				Notes:    strings.TrimSpace(jsonString(record, "notes")),
-			})
+		if err != nil {
+			reportProgress(progress, index+1, intRef(total))
+			continue
 		}
+
+		_, _ = sink.Insert(Address{
+			Name:     strings.TrimSpace(name),
+			Email:    strings.TrimSpace(email),
+			Birthday: birthday,
+			Address:  strings.TrimSpace(jsonString(record, "address")),
+			Phone:    strings.TrimSpace(jsonString(record, "phone")),
+			Mobile:   strings.TrimSpace(jsonString(record, "mobile")),
+			Custom:   strings.TrimSpace(jsonString(record, "custom")),
+			Notes:    strings.TrimSpace(jsonString(record, "notes")),
+		})
 
 		reportProgress(progress, index+1, intRef(total))
 	}

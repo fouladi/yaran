@@ -36,18 +36,21 @@ func (HTMLPlugin) Import(path string, sink AddressInserter, progress ProgressFun
 		}
 
 		birthday, err := ValidateBirthday(strings.TrimSpace(attrs["birthday"]))
-		if err == nil {
-			_, _ = sink.Insert(Address{
-				Name:     strings.TrimSpace(attrs["name"]),
-				Email:    strings.TrimSpace(attrs["email"]),
-				Birthday: birthday,
-				Address:  strings.TrimSpace(html.UnescapeString(match[2])),
-				Phone:    strings.TrimSpace(attrs["phone"]),
-				Mobile:   strings.TrimSpace(attrs["mobile"]),
-				Custom:   strings.TrimSpace(attrs["custom"]),
-				Notes:    strings.TrimSpace(attrs["notes"]),
-			})
+		if err != nil {
+			reportProgress(progress, index+1, intRef(total))
+			continue
 		}
+
+		_, _ = sink.Insert(Address{
+			Name:     strings.TrimSpace(attrs["name"]),
+			Email:    strings.TrimSpace(attrs["email"]),
+			Birthday: birthday,
+			Address:  strings.TrimSpace(html.UnescapeString(match[2])),
+			Phone:    strings.TrimSpace(attrs["phone"]),
+			Mobile:   strings.TrimSpace(attrs["mobile"]),
+			Custom:   strings.TrimSpace(attrs["custom"]),
+			Notes:    strings.TrimSpace(attrs["notes"]),
+		})
 
 		reportProgress(progress, index+1, intRef(total))
 	}

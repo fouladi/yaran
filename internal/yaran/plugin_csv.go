@@ -50,18 +50,21 @@ func (CSVPlugin) Import(path string, sink AddressInserter, progress ProgressFunc
 		}
 
 		birthday, err := ValidateBirthday(csvOptional(row, header, "birthday"))
-		if err == nil {
-			_, _ = sink.Insert(Address{
-				Name:     name,
-				Email:    email,
-				Birthday: birthday,
-				Address:  csvOptional(row, header, "address"),
-				Phone:    csvOptional(row, header, "phone"),
-				Mobile:   csvOptional(row, header, "mobile"),
-				Custom:   csvOptional(row, header, "custom"),
-				Notes:    csvOptional(row, header, "notes"),
-			})
+		if err != nil {
+			reportProgress(progress, recordIndex, intRef(total))
+			continue
 		}
+
+		_, _ = sink.Insert(Address{
+			Name:     name,
+			Email:    email,
+			Birthday: birthday,
+			Address:  csvOptional(row, header, "address"),
+			Phone:    csvOptional(row, header, "phone"),
+			Mobile:   csvOptional(row, header, "mobile"),
+			Custom:   csvOptional(row, header, "custom"),
+			Notes:    csvOptional(row, header, "notes"),
+		})
 
 		reportProgress(progress, recordIndex, intRef(total))
 	}

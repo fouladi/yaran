@@ -62,10 +62,7 @@ func (s *Service) ExportAddresses(path string, fileFormat string, filters Filter
 		return err
 	}
 
-	if err := handler.Export(path, addresses, progress); err != nil {
-		return err
-	}
-	return nil
+	return handler.Export(path, addresses, progress)
 }
 
 func (s *Service) AvailableFormats() []string {

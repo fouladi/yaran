@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 )
 
 var (
@@ -253,32 +252,41 @@ func escapeComponent(value string) string {
 }
 
 func foldContentLine(line string) string {
+	// RFC 6350 §3.2: lines SHOULD be no longer than 75 octets (bytes), not
+	// characters. We fold on byte boundaries while keeping runes intact.
 	const limit = 75
 
 	parts := make([]string, 0, 2)
-	current := ""
 	prefix := ""
+	lineBytes := []byte(line)
+	offset := 0
 
-	for _, char := range line {
-		candidate := current + string(char)
-		if utf8.RuneCountInString(prefix+candidate) == len([]rune(prefix+candidate)) && len([]byte(prefix+candidate)) <= limit {
-			current = candidate
-			continue
+	for offset < len(lineBytes) {
+		available := limit - len(prefix)
+		if available <= 0 {
+			// Shouldn't happen, but guard against infinite loop.
+			available = 1
 		}
 
-		if current != "" {
-			parts = append(parts, prefix+current)
-			prefix = " "
-			current = string(char)
-			continue
+		end := offset + available
+		if end >= len(lineBytes) {
+			parts = append(parts, prefix+string(lineBytes[offset:]))
+			break
 		}
 
-		parts = append(parts, prefix)
+		// Walk back to a rune boundary so we never split a multi-byte rune.
+		for end > offset && lineBytes[end]&0xC0 == 0x80 {
+			end--
+		}
+		if end == offset {
+			end = offset + available // single rune wider than available; force split
+		}
+
+		parts = append(parts, prefix+string(lineBytes[offset:end]))
 		prefix = " "
-		current = string(char)
+		offset = end
 	}
 
-	parts = append(parts, prefix+current)
 	return strings.Join(parts, "\r\n")
 }
 

@@ -53,7 +53,12 @@ CREATE TABLE IF NOT EXISTS addresses (
 }
 
 func (s *Store) hasColumn(table string, column string) (bool, error) {
-	rows, err := s.db.Query(fmt.Sprintf("PRAGMA table_info(%s)", table))
+	// PRAGMA does not support parameter binding; the table name is an internal
+	// constant so this is safe, but we validate it to be explicit.
+	if table != "addresses" {
+		return false, fmt.Errorf("unexpected table name: %s", table)
+	}
+	rows, err := s.db.Query("PRAGMA table_info(" + table + ")")
 	if err != nil {
 		return false, fmt.Errorf("schema inspection: %w", err)
 	}
@@ -229,8 +234,16 @@ func (s *Store) Update(id int64, address Address) (Address, error) {
 }
 
 func (s *Store) Delete(id int64) error {
-	if _, err := s.db.Exec(`DELETE FROM addresses WHERE id = ?`, id); err != nil {
+	result, err := s.db.Exec(`DELETE FROM addresses WHERE id = ?`, id)
+	if err != nil {
 		return fmt.Errorf("delete address: %w", err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("delete address: %w", err)
+	}
+	if affected == 0 {
+		return fmt.Errorf("address with id=%d not found", id)
 	}
 	return nil
 }
