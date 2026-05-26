@@ -1,7 +1,7 @@
 # Changelog
 
-This listing shows the version of the `Doostan`, the date of
-release, and a summary of the changes in that release.
+This listing shows the version of the `Yaran`, the date of release, and
+a summary of the changes in that release.
 
 All notable changes to this project will be documented in this file.
 
