@@ -22,31 +22,24 @@ The name *yaran* is Persian for *dearest friends*.
 
 ## High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   cmd/yaran/main.go                 │
-│  CLI flags → Service init → TUI launch              │
-└────────────────────┬────────────────────────────────┘
-                     │
-          ┌──────────▼──────────┐
-          │   internal/tui      │
-          │   App (tview)       │  ← keyboard / mouse events
-          └──────────┬──────────┘
-                     │ calls
-          ┌──────────▼──────────┐
-          │  internal/yaran     │
-          │  Service            │  ← application logic
-          └──────┬──────┬───────┘
-                 │      │
-        ┌────────▼─┐  ┌─▼──────────┐
-        │  Store   │  │  Registry  │
-        │ (SQLite) │  │ (plugins)  │
-        └──────────┘  └─────┬──────┘
-                             │ FormatHandler
-                    ┌────────┴────────┐
-                    │  CSV / JSON /   │
-                    │  HTML / VCard   │
-                    └─────────────────┘
+```mermaid
+flowchart TD
+    main["<b>cmd/yaran/main.go</b><br/>CLI flags → Service init → TUI launch"]
+
+    tui["<b>internal/tui</b><br/>App (tview)<br/><i>keyboard / mouse events</i>"]
+
+    service["<b>internal/yaran</b><br/>Service<br/><i>application logic</i>"]
+
+    store["<b>Store</b><br/>(SQLite)"]
+    registry["<b>Registry</b><br/>(plugins)"]
+
+    plugins["<b>CSV / JSON / HTML / VCard</b><br/>FormatHandler implementations"]
+
+    main --> tui
+    tui -->|calls| service
+    service --> store
+    service --> registry
+    registry -->|FormatHandler| plugins
 ```
 
 ### Layers
@@ -165,20 +158,35 @@ Built on [tview](https://github.com/rivo/tview) and
 
 #### Layout
 
-```
-┌─ Title ──────────────────────────────────────────────────────┐
-│ ┌─ Sidebar ──────────┐  ┌─ Toolbar ──────────────────────── ┐│
-│ │ Selected details   │  │ Add | Edit | Delete | Import | Exp ││
-│ │                    │  ├─ Addresses ──────────────────────── ┤│
-│ │ Stats              │  │ Name | Email | Birthday | … | ID   ││
-│ │ Filter hint        │  │ …                                  ││
-│ │ Filter field/input │  │                                    ││
-│ │ Apply | Clear      │  │                                    ││
-│ │ Import | Export    │  │                                    ││
-│ └────────────────────┘  └────────────────────────────────────┘│
-├─ Help ────────────────────────────────────────────────────────┤
-├─ Status ──────────────────────────────────────────────────────┤
-└───────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    Title["<b>Title</b><br/>Yaran — Address book manager in Go"]
+
+    subgraph Screen["Main screen"]
+        direction LR
+
+        subgraph Sidebar["Sidebar"]
+            direction TB
+            Details["Selected details"]
+            Stats["Stats"]
+            FilterHint["Filter hint"]
+            FilterControls["Filter field / input<br/>Apply | Clear"]
+            TransferMenus["Import dropdown<br/>Export dropdown"]
+        end
+
+        subgraph MainPane["Main pane"]
+            direction TB
+            Toolbar["Toolbar: Add | Edit | Delete | Import | Export"]
+            Table["Addresses table<br/>Name | Email | Birthday | Phone | Mobile | Custom | ID"]
+        end
+    end
+
+    Help["<b>Help</b><br/>Keyboard shortcuts"]
+    Status["<b>Status</b><br/>Ready / error messages"]
+
+    Title --> Screen
+    Screen --> Help
+    Help --> Status
 ```
 
 #### Focus management
